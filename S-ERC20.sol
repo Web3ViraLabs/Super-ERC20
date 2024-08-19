@@ -1026,10 +1026,11 @@ contract SuperToken is ERC20, Ownable {
     transferTaxTotal = transferMarketingTax + transferProjectTax; // Total transfer tax percentage
 
     // Set the marketing wallet address
-    marketingWallet = address(//Marketing Tax wallet here "no quotes");
+    marketingWallet = address(0xYourMarketingWalletAddressHere); // Replace with actual wallet address
 
     // Set the project wallet address (initialized to the contract deployer's address)
     projectWallet = address(msg.sender);
+
 
     // Exempt specific addresses from paying transaction taxes or being limited by transaction limits
     transactionTaxesExempt(msg.sender, true);         // Exempt the deployer from transaction taxes

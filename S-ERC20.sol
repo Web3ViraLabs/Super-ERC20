@@ -1,8 +1,22 @@
 /*
- * SPDX-License-Identifier: MIT
- * https://x.com/web3viralabs
- * https://t.me/web3viralabs
- * https://viralabs.xyz
+ * ----------------------------------------------------------------------------
+ * "THE VIRALABS LICENSE" (MIT License)
+ * ----------------------------------------------------------------------------
+ * 
+ * This contract is licensed under the MIT License.
+ * You are free to use, modify, and distribute this contract as long as you 
+ * retain the copyright notice and this permission notice.
+ * 
+ * Follow Us:
+ * 
+ * Website:                https://viralabs.io
+ * X (formerly Twitter):   https://x.com/web3viralabs
+ * Telegram:               https://t.me/web3viralabs
+ * 
+ * 
+ * ----------------------------------------------------------------------------
+ * Stay updated with the latest developments and tools from ViraLabs!
+ * ----------------------------------------------------------------------------
  */
 
 
@@ -849,7 +863,7 @@ interface IDexRouter {
     ) external;
 }
 
-contract SatoParents is ERC20, Ownable {
+contract SuperToken is ERC20, Ownable {
     using SafeMath for uint256;
 
     IDexRouter private immutable dexRouter;
@@ -945,74 +959,103 @@ contract SatoParents is ERC20, Ownable {
         uint256 sellProjectTax
     );
 
-    constructor() ERC20("SatoParents", "$SATOS") {
-        IDexRouter _dexRouter = IDexRouter(
-            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
-        );
+    constructor() ERC20("SuperToken", "$STN") {
+    // Initialize the DEX router with the provided address (Uniswap or other compatible DEX)
+    IDexRouter _dexRouter = IDexRouter(
+        // "Chain" Uniswap Router Address here without "quotes"
+    );
 
-        transactionLimitsExempt(address(_dexRouter), true);
-        dexRouter = _dexRouter;
+    // Exempt the DEX router from transaction limits
+    transactionLimitsExempt(address(_dexRouter), true);
 
-        dexPair = IDexFactory(_dexRouter.factory()).createPair(
-            address(this),
-            _dexRouter.WETH()
-        );
-        transactionLimitsExempt(address(dexPair), true);
-        _setDexPair(address(dexPair), true);
+    // Set the DEX router instance for the contract
+    dexRouter = _dexRouter;
 
-        uint256 _buyMarketingTax = 10;
-        uint256 _buyProjectTax = 0;
+    // Create a pair for this token with the DEX's WETH token
+    dexPair = IDexFactory(_dexRouter.factory()).createPair(
+        address(this),
+        _dexRouter.WETH()
+    );
 
-        uint256 _sellMarketingTax = 80;
-        uint256 _sellProjectTax = 0;
+    // Exempt the DEX pair from transaction limits
+    transactionLimitsExempt(address(dexPair), true);
 
-        uint256 _transferMarketingTax = 20;
-        uint256 _transferProjectTax = 0;
+    // Mark this pair as a valid DEX pair for trading
+    _setDexPair(address(dexPair), true);
 
-        uint256 _totalSupply = 1_000_000_000 * 10 ** decimals();
+    // Define buy taxes
+    uint256 _buyMarketingTax = 0;  // Marketing tax for buy transactions (%)
+    uint256 _buyProjectTax = 0;     // Project tax for buy transactions (%)
 
-        maxTx = (_totalSupply * 10) / 1000;
-        maxWallet = (_totalSupply * 10) / 1000;
+    // Define sell taxes
+    uint256 _sellMarketingTax = 0; // Marketing tax for sell transactions (%)
+    uint256 _sellProjectTax = 0;    // Project tax for sell transactions (%)
 
-        swapBackValueMin = (_totalSupply * 1) / 1000;
-        swapBackValueMax = (_totalSupply * 2) / 100;
+    // Define transfer taxes
+    uint256 _transferMarketingTax = 0; // Marketing tax for token transfers (%)
+    uint256 _transferProjectTax = 0;    // Project tax for token transfers (%)
 
-        buyMarketingTax = _buyMarketingTax;
-        buyProjectTax = _buyProjectTax;
-        buyTaxTotal = buyMarketingTax + buyProjectTax;
+    // Define the total token supply with decimals
+    uint256 _totalSupply = 1_000_000_000 * 10 ** decimals(); // 1 billion tokens with decimals Specified
 
-        sellMarketingTax = _sellMarketingTax;
-        sellProjectTax = _sellProjectTax;
-        sellTaxTotal = sellMarketingTax + sellProjectTax;
+    // Set the maximum transaction limit (1.0% of total supply)
+    maxTx = (_totalSupply * 10) / 1000;
 
-        transferMarketingTax = _transferMarketingTax;
-        transferProjectTax = _transferProjectTax;
-        transferTaxTotal = transferMarketingTax + transferProjectTax;
+    // Set the maximum wallet limit (1.0% of total supply)
+    maxWallet = (_totalSupply * 10) / 1000;
 
-        marketingWallet = address(0x5dE3f2923C2A81DEb57440Fe113484511dfA651e);
-        projectWallet = address(msg.sender);
+    // Set the minimum amount of tokens to trigger a swap back (0.1% of total supply)
+    swapBackValueMin = (_totalSupply * 1) / 1000;
 
-        // exclude from paying fees or having max transaction amount
-        transactionTaxesExempt(msg.sender, true);
-        transactionTaxesExempt(address(this), true);
-        transactionTaxesExempt(address(0xdead), true);
-        transactionTaxesExempt(marketingWallet, true);
+    // Set the maximum amount of tokens for swap back (2.0% of total supply)
+    swapBackValueMax = (_totalSupply * 2) / 100;
 
-        transactionLimitsExempt(msg.sender, true);
-        transactionLimitsExempt(address(this), true);
-        transactionLimitsExempt(address(0xdead), true);
-        transactionLimitsExempt(marketingWallet, true);
+    // Assign the buy taxes to their respective variables
+    buyMarketingTax = _buyMarketingTax;
+    buyProjectTax = _buyProjectTax;
+    buyTaxTotal = buyMarketingTax + buyProjectTax; // Total buy tax percentage
 
-        transferOwnership(msg.sender);
+    // Assign the sell taxes to their respective variables
+    sellMarketingTax = _sellMarketingTax;
+    sellProjectTax = _sellProjectTax;
+    sellTaxTotal = sellMarketingTax + sellProjectTax; // Total sell tax percentage
 
-        /*
-            _mint is an internal function in ERC20.sol that is only called here,
-            and CANNOT be called ever again
-        */
-        _mint(msg.sender, _totalSupply);
-    }
+    // Assign the transfer taxes to their respective variables
+    transferMarketingTax = _transferMarketingTax;
+    transferProjectTax = _transferProjectTax;
+    transferTaxTotal = transferMarketingTax + transferProjectTax; // Total transfer tax percentage
 
-    receive() external payable {}
+    // Set the marketing wallet address
+    marketingWallet = address(//Marketing Tax wallet here "no quotes");
+
+    // Set the project wallet address (initialized to the contract deployer's address)
+    projectWallet = address(msg.sender);
+
+    // Exempt specific addresses from paying transaction taxes or being limited by transaction limits
+    transactionTaxesExempt(msg.sender, true);         // Exempt the deployer from transaction taxes
+    transactionTaxesExempt(address(this), true);      // Exempt the contract itself from transaction taxes
+    transactionTaxesExempt(address(0xdead), true);    // Exempt the burn address from transaction taxes
+    transactionTaxesExempt(marketingWallet, true);    // Exempt the marketing wallet from transaction taxes
+
+    // Exempt specific addresses from transaction limits
+    transactionLimitsExempt(msg.sender, true);        // Exempt the deployer from transaction limits
+    transactionLimitsExempt(address(this), true);     // Exempt the contract itself from transaction limits
+    transactionLimitsExempt(address(0xdead), true);   // Exempt the burn address from transaction limits
+    transactionLimitsExempt(marketingWallet, true);   // Exempt the marketing wallet from transaction limits
+
+    // Transfer ownership of the contract to the deployer
+    transferOwnership(msg.sender);
+
+    /*
+        _mint is an internal function in ERC20.sol that is only called here,
+        and CANNOT be called ever again
+    */
+    _mint(msg.sender, _totalSupply); // Mint the total supply to the deployer (contract creator)
+}
+
+// Fallback function to receive ETH when sent directly to the contract
+receive() external payable {}
+
 
     /**
      * @notice  Opens public trading for the token
@@ -1531,3 +1574,20 @@ contract SatoParents is ERC20, Ownable {
         }("");
     }
 }
+
+/*
+ * ----------------------------------------------------------------------------
+ * SuperToken ($STN) - ERC-20 Token Contract
+ * ----------------------------------------------------------------------------
+ * 
+ * A comprehensive token system with advanced tax mechanisms, 
+ * transaction limits, and automated swaps, designed for seamless 
+ * trading and project sustainability.
+ * 
+ * Created by ViraLabs
+ * ----------------------------------------------------------------------------
+ * 
+ * DISCLAIMER: This contract is provided "as is" without warranties. 
+ * Users assume all risks associated with its deployment and use.
+ * ----------------------------------------------------------------------------
+ */
